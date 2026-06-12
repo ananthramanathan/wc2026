@@ -69,14 +69,21 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
   }
   const winner = actualOutcome();
 
+  const shellTone = finished
+    ? "bg-zinc-100 border-zinc-200"
+    : kicked
+      ? "bg-emerald-50/50 border-emerald-200"
+      : "bg-white border-zinc-200";
+
   return (
     <>
+    <div className={`rounded-2xl border shadow-sm overflow-hidden ${shellTone}`}>
       <button
         onClick={() => !locked && setOpen(true)}
         disabled={locked}
-        className={`w-full text-left rounded-2xl border p-4 shadow-sm transition ${
-          finished ? "bg-zinc-100 border-zinc-200" : kicked ? "bg-emerald-50/50 border-emerald-200" : "bg-white border-zinc-200 active:scale-[0.99]"
-        } disabled:active:scale-100`}
+        className={`w-full text-left p-4 transition ${
+          !locked ? "active:scale-[0.99]" : ""
+        }`}
       >
         <div className="flex items-center justify-between text-xs text-zinc-500 mb-2">
           <span>
@@ -125,21 +132,26 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
       </button>
 
       {kicked && allPicks.length > 0 && (
-        <div className="px-3 pt-2 pb-1">
+        <div className="border-t border-zinc-200/70 px-4 py-2.5">
           <button
             onClick={() => setPicksOpen((v) => !v)}
-            className="flex items-center gap-1 text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-2"
+            className="w-full flex items-center justify-between text-[11px] uppercase tracking-wider text-zinc-500 font-semibold"
           >
             <span>
               {allPicks.length} {allPicks.length === 1 ? "pick" : "picks"}
             </span>
             <ChevronDown
-              className={`size-3.5 transition-transform ${picksOpen ? "rotate-180" : ""}`}
+              className={`size-4 transition-transform ${picksOpen ? "rotate-180" : ""}`}
               strokeWidth={2.5}
             />
           </button>
-          {picksOpen && (
-            <div className="flex flex-wrap gap-2">
+          <div
+            className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+              picksOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="flex flex-wrap gap-2 pt-2.5">
               {allPicks.map((p) => {
                 const pr = profileById?.get(p.user_id);
                 const isMe = p.user_id === meId;
@@ -167,10 +179,12 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
                   </Link>
                 );
               })}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
+    </div>
 
       {open && (
         <PredictSheet
