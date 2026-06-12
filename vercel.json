@@ -1,6 +1,1 @@
-{
-  "crons": [
-    { "path": "/api/cron/ingest-results", "schedule": "*/30 16-23,0-5 * * *" },
-    { "path": "/api/cron/odds", "schedule": "0 11 * * *" }
-  ]
-}
+{}

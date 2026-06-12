@@ -1,0 +1,33 @@
+name: WC2026 cron jobs
+
+on:
+  schedule:
+    # Ingest match results: every 30 min during match windows (16:00–05:00 UTC)
+    - cron: "*/30 16-23 * * *"
+    - cron: "*/30 0-5 * * *"
+    # Daily odds refresh at 11:00 UTC
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide endpoint
+        id: pick
+        run: |
+          minute=$(date -u +%-M)
+          hour=$(date -u +%-H)
+          if [ "$hour" = "11" ] && [ "$minute" = "0" ]; then
+            echo "endpoint=odds" >> $GITHUB_OUTPUT
+          else
+            echo "endpoint=ingest-results" >> $GITHUB_OUTPUT
+          fi
+      - name: Hit cron route
+        env:
+          PROD_URL: ${{ secrets.PROD_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -sSf -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${PROD_URL}/api/cron/${{ steps.pick.outputs.endpoint }}" \
+            -w "\nHTTP %{http_code}\n"
