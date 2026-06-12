@@ -78,6 +78,7 @@ const BY_NAME = new Map(TEAMS.map((t) => [t.name, t]));
 BY_NAME.set("USA", TEAMS.find((t) => t.name === "United States")!);
 BY_NAME.set("Czechia", TEAMS.find((t) => t.name === "Czech Republic")!);
 BY_NAME.set("Bosnia & Herzegovina", TEAMS.find((t) => t.name === "Bosnia and Herzegovina")!);
+BY_NAME.set("Bosnia-Herzegovina", TEAMS.find((t) => t.name === "Bosnia and Herzegovina")!);
 BY_NAME.set("Turkey", TEAMS.find((t) => t.name === "Türkiye")!);
 BY_NAME.set("Curacao", TEAMS.find((t) => t.name === "Curaçao")!);
 BY_NAME.set("Korea Republic", TEAMS.find((t) => t.name === "South Korea")!);
