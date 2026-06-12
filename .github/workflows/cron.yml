@@ -2,7 +2,10 @@ name: WC2026 cron jobs
 
 on:
   schedule:
-    # Ingest match results: every 30 min during match windows (16:00–05:00 UTC)
+    # Live in-match score polling: every 5 min during match windows (16:00–05:00 UTC)
+    - cron: "*/5 16-23 * * *"
+    - cron: "*/5 0-5 * * *"
+    # openfootball final-score reconcile: every 30 min during match windows
     - cron: "*/30 16-23 * * *"
     - cron: "*/30 0-5 * * *"
     # Daily odds refresh at 11:00 UTC
@@ -20,8 +23,12 @@ jobs:
           hour=$(date -u +%-H)
           if [ "$hour" = "11" ] && [ "$minute" = "0" ]; then
             echo "endpoint=odds" >> $GITHUB_OUTPUT
-          else
+          elif [ "$((minute % 30))" = "0" ]; then
+            # On the half-hour: openfootball reconcile (covers minutes 0 and 30)
             echo "endpoint=ingest-results" >> $GITHUB_OUTPUT
+          else
+            # Every other 5-min tick: live scores poll
+            echo "endpoint=live-scores" >> $GITHUB_OUTPUT
           fi
       - name: Hit cron route
         env:
