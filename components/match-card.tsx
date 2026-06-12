@@ -173,7 +173,7 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
                   >
                     <Jersey team={pr?.avatar_url} size={20} showFlag={false} />
                     <span className="font-medium truncate max-w-[6rem]">
-                      {isMe ? "You" : (pr?.display_name ?? "?")}
+                      {pr?.display_name ?? "?"}
                     </span>
                     <span className="font-bold">{pickLabel(p)}</span>
                   </Link>
