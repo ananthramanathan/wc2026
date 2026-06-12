@@ -21,13 +21,20 @@ export function LeaderboardView({ rows, meId }: { rows: LbRow[]; meId: string })
   const ranked = useMemo(() => {
     return [...rows].sort((a, b) =>
       tab === "results"
-        ? b.results_total - a.results_total || b.correct_results - a.correct_results
-        : b.scores_total - a.scores_total || b.exact_scores - a.exact_scores,
+        ? b.results_total - a.results_total ||
+          b.correct_results - a.correct_results ||
+          a.display_name.localeCompare(b.display_name)
+        : b.scores_total - a.scores_total ||
+          b.exact_scores - a.exact_scores ||
+          a.display_name.localeCompare(b.display_name),
     );
   }, [rows, tab]);
 
   return (
     <div>
+      <div className="text-xs text-zinc-500 mb-3 px-1">
+        {rows.length} {rows.length === 1 ? "player" : "players"} signed up
+      </div>
       <div className="grid grid-cols-2 gap-2 mb-5 p-1 bg-zinc-200 rounded-full">
         {(["results", "scores"] as const).map((t) => (
           <button

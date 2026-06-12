@@ -79,7 +79,11 @@ export function OnboardingForm({ teams, defaultName }: { teams: string[]; defaul
 
       <div className="text-xs text-zinc-500 space-y-1">
         <p>Pick a scoreline or just W/D/L on every match — choose as you go.</p>
-        <p>Points: correct result = <span className="font-semibold">1 pt</span>, correct goal difference = <span className="font-semibold">1.5 pts</span>, exact score = <span className="font-semibold">3 pts</span>.</p>
+        <p>
+          Points: correct result = <span className="font-semibold">1 pt</span>,
+          correct result + correct goal diff = <span className="font-semibold">1.5 pts</span>,
+          exact score = <span className="font-semibold">3 pts</span>.
+        </p>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
