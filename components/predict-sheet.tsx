@@ -67,6 +67,9 @@ export function PredictSheet({ match, existing, onClose }: Props) {
           </div>
         </div>
 
+        <div className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold text-center mb-2">
+          Predict the result · 1 pt
+        </div>
         <div className="grid grid-cols-3 gap-2 mb-5">
           {([
             { key: "H" as const, label: homeName },
@@ -95,7 +98,7 @@ export function PredictSheet({ match, existing, onClose }: Props) {
         </div>
 
         <div className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold text-center mb-2">
-          Predict the scoreline · bonus 1.5 or 3 pts
+          Predict the scoreline · goal diff 0.5 pts or result 1.5 pts
         </div>
         <div className="flex items-center justify-center gap-4 mb-6">
           <Stepper label={homeName} value={home} onChange={setHome} />
