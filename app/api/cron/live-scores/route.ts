@@ -14,8 +14,9 @@ export async function GET(req: NextRequest) {
   const { matches: live } = await fetchActiveMatches();
 
   // Local matches in a window around now for matching.
-  const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-  const until = new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString();
+  // Window covers anything that could still be live, just-finished, or about to kick off.
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const until = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
   const { data: rows } = await supa
     .from("matches")
     .select("id, home_team, away_team, kickoff_utc, status")
