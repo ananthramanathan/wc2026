@@ -18,7 +18,7 @@ export async function saveProfile(input: Input) {
     display_name: input.display_name,
     avatar_url: input.avatar_url,
     champion_team: input.champion_team,
-    mode: null,
+    mode: "scores",
   });
   if (error) return { error: error.message };
   return { ok: true };
