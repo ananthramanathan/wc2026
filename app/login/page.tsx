@@ -25,8 +25,8 @@ export default function LoginPage() {
         className="object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-      <div className="relative flex-1 flex flex-col justify-end p-8 pb-[max(env(safe-area-inset-bottom),2rem)]">
-        <h1 className="text-4xl font-black tracking-tight mb-6 drop-shadow-lg">
+      <div className="relative flex-1 flex flex-col justify-end items-center p-8 pb-[max(env(safe-area-inset-bottom),2rem)]">
+        <h1 className="text-4xl font-black tracking-tight mb-6 drop-shadow-lg text-center">
           WC 2026 Predictor
         </h1>
         <button

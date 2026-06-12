@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Jersey } from "@/components/jersey";
 
 export interface LbRow {
@@ -53,9 +54,10 @@ export function LeaderboardView({ rows, meId }: { rows: LbRow[]; meId: string })
           const pts = tab === "results" ? r.results_total : r.scores_total;
           const count = tab === "results" ? r.correct_results : r.exact_scores;
           return (
-            <div
+            <Link
               key={r.user_id}
-              className={`grid grid-cols-[1.5rem_2.5rem_1fr_3rem_3rem] gap-3 items-center rounded-xl p-3 border ${
+              href={me ? "/profile" : `/u/${r.user_id}`}
+              className={`grid grid-cols-[1.5rem_2.5rem_1fr_3rem_3rem] gap-3 items-center rounded-xl p-3 border transition active:scale-[0.99] ${
                 me ? "bg-emerald-50 border-emerald-200" : "bg-white border-zinc-200"
               }`}
             >
@@ -64,7 +66,7 @@ export function LeaderboardView({ rows, meId }: { rows: LbRow[]; meId: string })
               <div className="font-medium truncate">{r.display_name}</div>
               <div className="text-right text-sm text-zinc-600 tabular-nums">{count}</div>
               <div className="text-right font-bold tabular-nums">{pts}</div>
-            </div>
+            </Link>
           );
         })}
         {ranked.length === 0 && (

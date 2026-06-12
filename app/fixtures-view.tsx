@@ -169,6 +169,7 @@ export function FixturesView({
                   othersPicks={(allByMatch.get(m.id) ?? []).filter((p) => p.user_id !== meId)}
                   profileById={profileById}
                   recordByTeam={recordByTeam}
+                  meId={meId}
                 />
               ))}
             </div>

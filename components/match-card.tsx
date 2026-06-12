@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { timeLocal, flag, displayName, impliedPct } from "@/lib/format";
 import { abbrev } from "@/lib/teams";
 import { Jersey } from "@/components/jersey";
@@ -27,22 +29,45 @@ interface Props {
   othersPicks?: OtherPick[];
   profileById?: Map<string, MiniProfile>;
   recordByTeam?: Map<string, TeamRecord>;
+  meId: string;
 }
 
-export function MatchCard({ match, myPrediction, othersPicks = [], profileById, recordByTeam }: Props) {
+export function MatchCard({ match, myPrediction, othersPicks = [], profileById, recordByTeam, meId }: Props) {
   const [open, setOpen] = useState(false);
   const kicked = new Date(match.kickoff_utc) <= new Date();
   const finished = match.status === "finished";
   const tbd = !match.home_team || !match.away_team;
   const locked = kicked || tbd;
+  const [picksOpen, setPicksOpen] = useState(!finished);
 
   function pickLabel(p: { pred_home: number | null; pred_away: number | null; pred_outcome: string }) {
     if (p.pred_home !== null && p.pred_away !== null) return `${p.pred_home}-${p.pred_away}`;
-    return p.pred_outcome === "H" ? "Home" : p.pred_outcome === "A" ? "Away" : "Draw";
+    return p.pred_outcome === "H" ? abbrev(match.home_team) : p.pred_outcome === "A" ? abbrev(match.away_team) : "Draw";
   }
 
-  const homeRec = match.home_team ? recordByTeam?.get(match.home_team) : null;
-  const awayRec = match.away_team ? recordByTeam?.get(match.away_team) : null;
+  const zero: TeamRecord = { w: 0, d: 0, l: 0 };
+  const isGroup = match.stage === "group";
+  const homeRec = match.home_team && isGroup ? (recordByTeam?.get(match.home_team) ?? zero) : null;
+  const awayRec = match.away_team && isGroup ? (recordByTeam?.get(match.away_team) ?? zero) : null;
+
+  // All picks list (me first, then others) — only shown after kickoff.
+  const allPicks: OtherPick[] = [];
+  if (myPrediction) {
+    allPicks.push({
+      user_id: meId,
+      match_id: match.id,
+      pred_home: myPrediction.pred_home,
+      pred_away: myPrediction.pred_away,
+      pred_outcome: myPrediction.pred_outcome,
+    });
+  }
+  othersPicks.forEach((p) => allPicks.push(p));
+
+  function actualOutcome(): "H" | "D" | "A" | null {
+    if (!finished || match.home_score == null || match.away_score == null) return null;
+    return match.home_score > match.away_score ? "H" : match.home_score < match.away_score ? "A" : "D";
+  }
+  const winner = actualOutcome();
 
   return (
     <>
@@ -87,51 +112,63 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
           </div>
         )}
 
-        <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between text-sm">
-          {myPrediction ? (
-            <div className="flex items-center gap-2">
-              <span className="text-zinc-500">Your pick:</span>
-              <span className="font-semibold">{pickLabel(myPrediction)}</span>
-            </div>
-          ) : tbd ? (
-            <span className="text-zinc-400">Teams TBD</span>
-          ) : !kicked ? (
-            <span className="text-emerald-600 font-semibold">Tap to predict →</span>
-          ) : (
-            <span className="text-zinc-400">No pick made</span>
-          )}
-          {kicked && !finished && (
-            <span className="text-xs text-emerald-600 font-semibold">🔒 locked</span>
-          )}
-        </div>
+        {!kicked && !myPrediction && !tbd && (
+          <div className="mt-3 pt-3 border-t border-zinc-100 text-sm text-emerald-600 font-semibold">
+            Tap to predict →
+          </div>
+        )}
+        {!kicked && tbd && (
+          <div className="mt-3 pt-3 border-t border-zinc-100 text-sm text-zinc-400">
+            Teams TBD
+          </div>
+        )}
       </button>
 
-      {kicked && othersPicks.length > 0 && (
+      {kicked && allPicks.length > 0 && (
         <div className="px-3 pt-2 pb-1">
-          <div className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-2">
-            Friends&apos; picks
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {othersPicks.map((p) => {
-              const pr = profileById?.get(p.user_id);
-              const correct =
-                finished &&
-                ((p.pred_home !== null && p.pred_home === match.home_score && p.pred_away === match.away_score) ||
-                  p.pred_outcome === (match.home_score! > match.away_score! ? "H" : match.home_score! < match.away_score! ? "A" : "D"));
-              return (
-                <div
-                  key={p.user_id}
-                  className={`flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 text-xs ${
-                    correct ? "bg-emerald-100 text-emerald-800" : "bg-white border border-zinc-200"
-                  }`}
-                >
-                  <Jersey team={pr?.avatar_url} size={20} showFlag={false} />
-                  <span className="font-medium truncate max-w-[6rem]">{pr?.display_name ?? "?"}</span>
-                  <span className="font-bold">{pickLabel(p)}</span>
-                </div>
-              );
-            })}
-          </div>
+          <button
+            onClick={() => setPicksOpen((v) => !v)}
+            className="flex items-center gap-1 text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-2"
+          >
+            <span>
+              {allPicks.length} {allPicks.length === 1 ? "pick" : "picks"}
+            </span>
+            <ChevronDown
+              className={`size-3.5 transition-transform ${picksOpen ? "rotate-180" : ""}`}
+              strokeWidth={2.5}
+            />
+          </button>
+          {picksOpen && (
+            <div className="flex flex-wrap gap-2">
+              {allPicks.map((p) => {
+                const pr = profileById?.get(p.user_id);
+                const isMe = p.user_id === meId;
+                const correct =
+                  finished &&
+                  ((p.pred_home !== null && p.pred_home === match.home_score && p.pred_away === match.away_score) ||
+                    (winner !== null && p.pred_outcome === winner));
+                return (
+                  <Link
+                    key={p.user_id}
+                    href={isMe ? "/profile" : `/u/${p.user_id}`}
+                    className={`flex items-center gap-1.5 rounded-full pl-1 pr-2.5 py-1 text-xs transition active:scale-[0.98] ${
+                      correct
+                        ? "bg-emerald-100 text-emerald-800"
+                        : isMe
+                          ? "bg-emerald-50 border border-emerald-200"
+                          : "bg-white border border-zinc-200"
+                    }`}
+                  >
+                    <Jersey team={pr?.avatar_url} size={20} showFlag={false} />
+                    <span className="font-medium truncate max-w-[6rem]">
+                      {isMe ? "You" : (pr?.display_name ?? "?")}
+                    </span>
+                    <span className="font-bold">{pickLabel(p)}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
