@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WC2026 Predictor
 
-## Getting Started
+Mobile-first World Cup 2026 predictor for friends & family. Pick scores, see a live leaderboard, talk trash. Next.js 16 + Supabase + Vercel.
 
-First, run the development server:
+## Setup (first time, ~15 min)
 
+### 1. Supabase
+1. New project at supabase.com (region: closest to friends).
+2. **Auth → Providers → Google**: enable, paste the Google OAuth client ID/secret. Add redirect URLs:
+   - `http://localhost:3000/auth/callback`
+   - `https://<your-vercel>.vercel.app/auth/callback`
+3. **SQL editor**: paste `supabase/migrations/001_init.sql`, run.
+4. **Settings → API**: copy URL, anon key, service role key into `.env.local`.
+
+### 2. API-Football
+1. Sign up at [api-football.com](https://www.api-football.com/) (free tier = 100 req/day).
+2. Copy your key → `API_FOOTBALL_KEY` in `.env.local`.
+3. World Cup league ID is `1` and the season tag is `2026` — defaults already set.
+
+### 3. `.env.local`
+Copy `.env.example` → `.env.local` and fill in.
+
+### 4. Seed the matches
+```bash
+npm install
+npm run seed
+```
+This pulls all 104 fixtures + any already-played scores into the `matches` table.
+
+### 5. Run
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Open http://localhost:3000.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+gh repo create wc2026 --private --source=. --remote=origin --push
+```
+Then import the repo on vercel.com. Add the same env vars in Vercel project settings. Vercel will pick up `vercel.json` and schedule the crons automatically.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture
 
-## Learn More
+- **Pages**: Login → Onboarding → Today / Fixtures / Profile / Leaderboards (mobile-only layout, bottom nav)
+- **Auth**: Supabase Google OAuth, session refreshed via `proxy.ts` (Next.js 16 proxy fka middleware)
+- **Predict**: bottom-sheet, server action `app/actions/savePrediction.ts`. Database trigger rejects late edits (don't trust client time).
+- **Scoring**: SQL view `v_scored_predictions` computes 1 / 1.5 / 3 pts per match; `v_leaderboard` aggregates per user.
+- **Crons**: lock (5m), ingest-results (15m), odds (3h), resolve-knockouts (daily). Guarded by `CRON_SECRET`.
 
-To learn more about Next.js, take a look at the following resources:
+## What's stubbed
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Fallback LLM agent for missing results** (brief §Automations) — not built yet. If API-Football misses a final score, fix manually in the DB or wire the agent later.
+- **PWA manifest / install prompt** — skipped for v1; iOS Safari "Add to home screen" still works on the responsive layout.
+- **Custom avatar upload** — preset grid only.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Manual ops
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Force-rerun a cron**:
+  `curl -H "Authorization: Bearer $CRON_SECRET" https://<your-vercel>.vercel.app/api/cron/ingest-results`
+- **Backfill a missing result**: edit the row in `matches`; the scoring view recomputes on read.
