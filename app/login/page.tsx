@@ -15,7 +15,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen relative flex flex-col text-white max-w-md mx-auto">
+    <main className="fixed inset-0 flex flex-col text-white max-w-md mx-auto overflow-hidden">
       <Image
         src="/wc2026-splash-tiny.jpg"
         alt=""
@@ -25,8 +25,8 @@ export default function LoginPage() {
         className="object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-      <div className="relative flex-1 flex flex-col justify-end items-center p-8 pb-[max(env(safe-area-inset-bottom),2rem)]">
-        <h1 className="text-4xl font-black tracking-tight mb-6 drop-shadow-lg text-center">
+      <div className="relative flex-1 flex flex-col justify-end items-center px-6 pt-6 pb-[max(env(safe-area-inset-bottom),1.5rem)]">
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-5 drop-shadow-lg text-center">
           WC 2026 Predictor
         </h1>
         <button
