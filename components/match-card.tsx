@@ -99,13 +99,13 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
         <div className="space-y-1.5">
           <Row
             team={match.home_team}
-            score={finished ? match.home_score : null}
+            score={(finished || kicked) ? match.home_score : null}
             record={homeRec}
             highlight={finished && match.home_score! > match.away_score!}
           />
           <Row
             team={match.away_team}
-            score={finished ? match.away_score : null}
+            score={(finished || kicked) ? match.away_score : null}
             record={awayRec}
             highlight={finished && match.away_score! > match.home_score!}
           />
