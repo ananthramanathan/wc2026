@@ -26,6 +26,7 @@ export interface Match {
   draw_odds: number | null;
   away_odds: number | null;
   odds_updated_at: string | null;
+  score_updated_at: string | null;
 }
 
 export interface Prediction {

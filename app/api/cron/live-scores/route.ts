@@ -60,6 +60,7 @@ export async function GET(req: NextRequest) {
       status,
       home_score,
       away_score,
+      score_updated_at: m.lastUpdated ?? new Date().toISOString(),
     }).eq("id", target.row.id);
     updated++;
   }

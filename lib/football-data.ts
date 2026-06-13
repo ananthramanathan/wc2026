@@ -12,6 +12,7 @@ interface ApiMatch {
   id: number;
   utcDate: string;
   status: ApiStatus;
+  lastUpdated?: string;
   homeTeam: { name: string | null };
   awayTeam: { name: string | null };
   score: {

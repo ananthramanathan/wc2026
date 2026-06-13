@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { timeLocal, flag, displayName, impliedPct } from "@/lib/format";
@@ -40,21 +40,18 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
   const locked = kicked || tbd;
   const [picksOpen, setPicksOpen] = useState(!finished);
 
-  // Live clock — ticks the displayed minute every 30s while a match is in play.
-  // Approximation: real-time elapsed since kickoff, with a 15-min halftime
-  // pause inserted between min 45 and 46 to roughly track football clocks.
-  const [now, setNow] = useState<number>(() => Date.now());
-  useEffect(() => {
-    if (!kicked || finished) return;
-    const t = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(t);
-  }, [kicked, finished]);
+  // Minute label is locked to the score: derived from when the live-scores
+  // cron last updated this row, NOT from the client clock. So the minute
+  // never advances past the moment the displayed score is true for.
   function liveMinute(): string {
-    const elapsedMin = Math.floor((now - new Date(match.kickoff_utc).getTime()) / 60_000);
+    if (!match.score_updated_at) return "LIVE";
+    const elapsedMin = Math.floor(
+      (new Date(match.score_updated_at).getTime() - new Date(match.kickoff_utc).getTime()) / 60_000,
+    );
     if (elapsedMin < 1) return "1'";
     if (elapsedMin <= 45) return `${elapsedMin}'`;
     if (elapsedMin <= 60) return "HT";
-    const second = elapsedMin - 15; // subtract halftime
+    const second = elapsedMin - 15;
     if (second <= 90) return `${second}'`;
     return "90+'";
   }
@@ -111,7 +108,7 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
               : match.stage.toUpperCase()}
           </span>
           <span className={kicked && !finished ? "text-emerald-600 font-semibold" : ""}>
-            {finished ? "FT" : kicked ? `LIVE ${liveMinute()}` : timeLocal(match.kickoff_utc)}
+            {finished ? "FT" : kicked ? (match.score_updated_at ? `LIVE ${liveMinute()}` : "LIVE") : timeLocal(match.kickoff_utc)}
           </span>
         </div>
 
