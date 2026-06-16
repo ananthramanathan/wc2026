@@ -40,21 +40,6 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
   const locked = kicked || tbd;
   const [picksOpen, setPicksOpen] = useState(!finished);
 
-  // Minute label is locked to the score: derived from when the live-scores
-  // cron last updated this row, NOT from the client clock. So the minute
-  // never advances past the moment the displayed score is true for.
-  function liveMinute(): string {
-    if (!match.score_updated_at) return "LIVE";
-    const elapsedMin = Math.floor(
-      (new Date(match.score_updated_at).getTime() - new Date(match.kickoff_utc).getTime()) / 60_000,
-    );
-    if (elapsedMin < 1) return "1'";
-    if (elapsedMin <= 45) return `${elapsedMin}'`;
-    if (elapsedMin <= 60) return "HT";
-    const second = elapsedMin - 15;
-    if (second <= 90) return `${second}'`;
-    return "90+'";
-  }
 
   function pickLabel(p: { pred_home: number | null; pred_away: number | null; pred_outcome: string }) {
     if (p.pred_home !== null && p.pred_away !== null) return `${p.pred_home}-${p.pred_away}`;
@@ -108,7 +93,7 @@ export function MatchCard({ match, myPrediction, othersPicks = [], profileById, 
               : match.stage.toUpperCase()}
           </span>
           <span className={kicked && !finished ? "text-emerald-600 font-semibold" : ""}>
-            {finished ? "FT" : kicked ? (match.score_updated_at ? `LIVE ${liveMinute()}` : "LIVE") : timeLocal(match.kickoff_utc)}
+            {finished ? "FT" : kicked ? "LIVE" : timeLocal(match.kickoff_utc)}
           </span>
         </div>
 
