@@ -27,6 +27,12 @@ export interface Match {
   away_odds: number | null;
   odds_updated_at: string | null;
   score_updated_at: string | null;
+  total_line: number | null;
+  over_price: number | null;
+  under_price: number | null;
+  spread_line: number | null;
+  spread_home_price: number | null;
+  spread_away_price: number | null;
 }
 
 export interface Prediction {

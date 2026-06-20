@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { flag, displayName } from "@/lib/format";
+import { flag, displayName, impliedPct } from "@/lib/format";
+import { abbrev } from "@/lib/teams";
 import { savePrediction } from "@/app/actions/savePrediction";
 import type { Match, Outcome, Prediction } from "@/lib/types";
 
@@ -100,11 +101,13 @@ export function PredictSheet({ match, existing, onClose }: Props) {
         <div className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold text-center mb-2">
           Predict the scoreline · goal diff 0.5 pts or result 1.5 pts
         </div>
-        <div className="flex items-center justify-center gap-4 mb-6">
+        <div className="flex items-center justify-center gap-4 mb-4">
           <Stepper label={homeName} value={home} onChange={setHome} />
           <div className="text-2xl text-zinc-300 mt-6">–</div>
           <Stepper label={awayName} value={away} onChange={setAway} />
         </div>
+
+        <MarketHints match={match} />
 
         {err && <p className="text-sm text-red-600 mb-3 text-center">{err}</p>}
 
@@ -119,6 +122,59 @@ export function PredictSheet({ match, existing, onClose }: Props) {
           Cancel
         </button>
       </div>
+    </div>
+  );
+}
+
+function MarketHints({ match }: { match: Match }) {
+  const totals = match.total_line != null && match.over_price && match.under_price;
+  const spread = match.spread_line != null && match.spread_home_price && match.spread_away_price;
+  if (!totals && !spread) return null;
+
+  // Spread sign convention: positive spread_line = home is favourite by that many goals.
+  const favTeam =
+    match.spread_line != null && match.spread_line > 0 ? match.home_team : match.away_team;
+  const favPrice =
+    match.spread_line != null && match.spread_line > 0
+      ? match.spread_home_price
+      : match.spread_away_price;
+  const absLine = match.spread_line != null ? Math.abs(match.spread_line) : null;
+
+  return (
+    <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-3 mb-5 space-y-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold text-center">
+        Market hints
+      </div>
+      {totals && (
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-zinc-600">
+            Total goals · line <span className="font-semibold text-zinc-900">{match.total_line}</span>
+          </span>
+          <span className="flex gap-3 tabular-nums">
+            <span><span className="text-zinc-500">Over</span> <span className="font-semibold">{impliedPct(match.over_price)}</span></span>
+            <span><span className="text-zinc-500">Under</span> <span className="font-semibold">{impliedPct(match.under_price)}</span></span>
+          </span>
+        </div>
+      )}
+      {spread && favTeam && absLine && (
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-zinc-600">
+            <span className="font-semibold text-zinc-900">{abbrev(favTeam)}</span> by{" "}
+            <span className="font-semibold text-zinc-900">{absLine}</span>+
+          </span>
+          <span className="flex gap-3 tabular-nums">
+            <span><span className="text-zinc-500">Yes</span> <span className="font-semibold">{impliedPct(favPrice)}</span></span>
+            <span>
+              <span className="text-zinc-500">No</span>{" "}
+              <span className="font-semibold">
+                {impliedPct(
+                  match.spread_line! > 0 ? match.spread_away_price : match.spread_home_price,
+                )}
+              </span>
+            </span>
+          </span>
+        </div>
+      )}
     </div>
   );
 }
