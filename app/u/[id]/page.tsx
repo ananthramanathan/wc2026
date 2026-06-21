@@ -17,9 +17,15 @@ export default async function PublicProfile({ params }: { params: Promise<{ id: 
   // Viewing own profile? Redirect to editable one.
   if (user.id === id) redirect("/profile");
 
+  const { data: me } = await supabase
+    .from("profiles").select("league").eq("id", user.id).maybeSingle<{ league: string }>();
+  if (!me) redirect("/onboarding");
+
   const { data: profile } = await supabase
-    .from("profiles").select("*").eq("id", id).maybeSingle<Profile>();
+    .from("profiles").select("*").eq("id", id).maybeSingle<Profile & { league: string }>();
   if (!profile) notFound();
+  // Cross-league profile views are hidden — picks belong to that league only.
+  if (profile.league !== me.league) notFound();
 
   const { data: scored } = await supabase
     .from("v_leaderboard")

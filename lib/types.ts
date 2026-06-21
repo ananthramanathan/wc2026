@@ -9,6 +9,7 @@ export interface Profile {
   avatar_url: string | null;
   mode: Mode | null;
   champion_team: string | null;
+  league: string;
   created_at: string;
 }
 

@@ -10,19 +10,22 @@ export default async function LeaderboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: profile } = await supabase
-    .from("profiles").select("id").eq("id", user.id).maybeSingle();
+    .from("profiles").select("id, league").eq("id", user.id).maybeSingle<{ id: string; league: string }>();
   if (!profile) redirect("/onboarding");
+  const league = profile.league ?? "main";
 
   const { data: rows } = await supabase
     .from("v_leaderboard")
     .select("*")
+    .eq("league", league)
     .order("results_total", { ascending: false });
 
-  // Most recent snapshot strictly before today, for ↑/↓ deltas.
+  // Most recent snapshot strictly before today, for ↑/↓ deltas — scoped to this league.
   const today = new Date().toISOString().slice(0, 10);
   const { data: lastDateRow } = await supabase
     .from("leaderboard_snapshots")
     .select("snap_date")
+    .eq("league", league)
     .lt("snap_date", today)
     .order("snap_date", { ascending: false })
     .limit(1)
@@ -33,6 +36,7 @@ export default async function LeaderboardPage() {
     const { data } = await supabase
       .from("leaderboard_snapshots")
       .select("user_id, results_rank, scores_rank")
+      .eq("league", league)
       .eq("snap_date", lastDateRow.snap_date);
     prev = data ?? [];
   }
