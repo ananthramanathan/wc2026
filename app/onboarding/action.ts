@@ -30,8 +30,14 @@ export async function saveProfile(input: Input) {
   });
   if (error) return { error: error.message };
 
-  // One-shot: clear the cookie so a future visit doesn't accidentally re-stamp
-  // (defensive — existing profile would block re-onboarding anyway).
+  // Multi-league source of truth. profiles.league stays as the user's primary
+  // (used by home/profile pages); profile_leagues drives leaderboard scoring.
+  await supabase.from("profile_leagues").insert({
+    user_id: user.id,
+    league,
+    // joined_at omitted → DB default now()
+  });
+
   jar.delete("wc_league");
   return { ok: true };
 }

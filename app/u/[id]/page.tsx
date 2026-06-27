@@ -24,8 +24,22 @@ export default async function PublicProfile({ params }: { params: Promise<{ id: 
   const { data: profile } = await supabase
     .from("profiles").select("*").eq("id", id).maybeSingle<Profile & { league: string }>();
   if (!profile) notFound();
-  // Cross-league profile views are hidden — picks belong to that league only.
-  if (profile.league !== me.league) notFound();
+
+  // Cross-league check: allow view if the two users share ANY league.
+  // Falls back to primary-league equality if profile_leagues is empty (pre-migration).
+  const [{ data: myLeagues }, { data: theirLeagues }] = await Promise.all([
+    supabase.from("profile_leagues").select("league").eq("user_id", user.id),
+    supabase.from("profile_leagues").select("league").eq("user_id", id),
+  ]);
+  const mine = new Set((myLeagues ?? []).map((r) => r.league));
+  const theirs = new Set((theirLeagues ?? []).map((r) => r.league));
+  let shareLeague = false;
+  if (mine.size > 0 && theirs.size > 0) {
+    for (const l of mine) if (theirs.has(l)) { shareLeague = true; break; }
+  } else {
+    shareLeague = profile.league === me.league;
+  }
+  if (!shareLeague) notFound();
 
   const { data: scored } = await supabase
     .from("v_leaderboard")

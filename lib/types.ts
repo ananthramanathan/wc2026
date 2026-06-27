@@ -36,6 +36,12 @@ export interface Match {
   spread_away_price: number | null;
 }
 
+export interface ProfileLeague {
+  user_id: string;
+  league: string;
+  joined_at: string;
+}
+
 export interface Prediction {
   id: string;
   user_id: string;

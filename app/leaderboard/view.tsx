@@ -10,6 +10,7 @@ export interface LbRow {
   display_name: string;
   avatar_url: string | null;
   mode: "results" | "scores" | null;
+  league: string;
   results_total: number;
   scores_total: number;
   correct_results: number;
@@ -22,14 +23,25 @@ export interface PrevRank {
   scores_rank: number;
 }
 
-interface Props {
+export interface LeagueBundle {
+  league: string;
   rows: LbRow[];
   prev: PrevRank[];
+}
+
+interface Props {
+  perLeague: LeagueBundle[];
+  defaultLeague: string;
   meId: string;
 }
 
-export function LeaderboardView({ rows, prev, meId }: Props) {
+export function LeaderboardView({ perLeague, defaultLeague, meId }: Props) {
   const [tab, setTab] = useState<"results" | "scores">("results");
+  const [league, setLeague] = useState<string>(defaultLeague);
+
+  const bundle = perLeague.find((b) => b.league === league) ?? perLeague[0];
+  const rows = bundle?.rows ?? [];
+  const prev = bundle?.prev ?? [];
 
   const prevByUser = useMemo(
     () => new Map(prev.map((p) => [p.user_id, p])),
@@ -50,6 +62,24 @@ export function LeaderboardView({ rows, prev, meId }: Props) {
 
   return (
     <div>
+      {perLeague.length > 1 && (
+        <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+          {perLeague.map((b) => (
+            <button
+              key={b.league}
+              onClick={() => setLeague(b.league)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider transition shrink-0 ${
+                league === b.league
+                  ? "bg-zinc-900 text-white"
+                  : "bg-white border border-zinc-200 text-zinc-600"
+              }`}
+            >
+              {b.league}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="text-xs text-zinc-500 mb-3 px-1">
         {rows.length} {rows.length === 1 ? "player" : "players"} signed up
       </div>
@@ -104,7 +134,7 @@ export function LeaderboardView({ rows, prev, meId }: Props) {
           <div className="text-center text-zinc-500 py-8">No players yet.</div>
         )}
       </div>
-      {prev.length === 0 && (
+      {prev.length === 0 && rows.length > 0 && (
         <p className="text-[11px] text-zinc-400 mt-4 px-1">
           Movement arrows appear once the first daily snapshot lands.
         </p>
