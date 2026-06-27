@@ -32,11 +32,21 @@ export async function saveProfile(input: Input) {
 
   // Multi-league source of truth. profiles.league stays as the user's primary
   // (used by home/profile pages); profile_leagues drives leaderboard scoring.
-  await supabase.from("profile_leagues").insert({
+  const { error: plError } = await supabase.from("profile_leagues").insert({
     user_id: user.id,
     league,
     // joined_at omitted → DB default now()
   });
+  if (plError) {
+    // Don't block onboarding — the user has a profile and can play. But surface
+    // the failure so we know to backfill (silent fail caused the Archit/Vihaan
+    // missing-from-leaderboard bug on 2026-06-27).
+    console.error("profile_leagues insert failed", {
+      user_id: user.id,
+      league,
+      error: plError,
+    });
+  }
 
   jar.delete("wc_league");
   return { ok: true };
