@@ -16,9 +16,26 @@ interface ApiMatch {
   homeTeam: { name: string | null };
   awayTeam: { name: string | null };
   score: {
+    duration?: "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT";
     fullTime: { home: number | null; away: number | null };
     halfTime?: { home: number | null; away: number | null };
+    regularTime?: { home: number | null; away: number | null };
+    extraTime?: { home: number | null; away: number | null };
+    penalties?: { home: number | null; away: number | null };
   };
+}
+
+// On shootout matches, football-data's `fullTime` is regular+ET+pens aggregate.
+// We grade against end-of-ET, so reconstruct from regularTime + extraTime.
+export function endOfEt(s: ApiMatch["score"]): { home: number | null; away: number | null } {
+  if (s.duration === "PENALTY_SHOOTOUT") {
+    const r = s.regularTime, e = s.extraTime;
+    return {
+      home: (r?.home ?? 0) + (e?.home ?? 0),
+      away: (r?.away ?? 0) + (e?.away ?? 0),
+    };
+  }
+  return { home: s.fullTime.home, away: s.fullTime.away };
 }
 
 interface ApiResponse {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdmin } from "@/lib/supabase/admin";
-import { fetchActiveMatches, mapStatus } from "@/lib/football-data";
+import { fetchActiveMatches, mapStatus, endOfEt } from "@/lib/football-data";
 import { authCron } from "@/lib/cron";
 import { getTeam } from "@/lib/teams";
 
@@ -52,8 +52,9 @@ export async function GET(req: NextRequest) {
     if (!target || target.dt > 4 * 60 * 60 * 1000) continue;
 
     const reversed = canon(target.row.home_team) !== homeCanon;
-    const home_score = reversed ? m.score.fullTime.away : m.score.fullTime.home;
-    const away_score = reversed ? m.score.fullTime.home : m.score.fullTime.away;
+    const eot = endOfEt(m.score);
+    const home_score = reversed ? eot.away : eot.home;
+    const away_score = reversed ? eot.home : eot.away;
     const status = mapStatus(m.status);
 
     await supa.from("matches").update({

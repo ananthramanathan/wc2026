@@ -11,7 +11,12 @@ interface RawMatch {
   time: string; // e.g. "13:00 UTC-6"
   team1: string;
   team2: string;
-  score?: { ft?: [number, number]; ht?: [number, number] };
+  score?: {
+    ft?: [number, number];
+    ht?: [number, number];
+    et?: [number, number];
+    p?: [number, number];
+  };
   group?: string; // e.g. "Group A"
   ground?: string;
 }
@@ -83,8 +88,8 @@ export async function fetchOpenFootball(): Promise<NormalisedMatch[]> {
       away_team: away_resolved ? m.team2 : null,
       kickoff_utc: parseKickoffToUtcIso(m.date, m.time),
       status: has_score ? "finished" : both_resolved ? "scheduled" : "tbd",
-      home_score: m.score?.ft?.[0] ?? null,
-      away_score: m.score?.ft?.[1] ?? null,
+      home_score: m.score?.et?.[0] ?? m.score?.ft?.[0] ?? null,
+      away_score: m.score?.et?.[1] ?? m.score?.ft?.[1] ?? null,
     };
   });
 }
